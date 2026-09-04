@@ -1,0 +1,433 @@
+DROP TABLE IF EXISTS payments;
+DROP TABLE IF EXISTS loans;
+DROP TABLE IF EXISTS applications;
+DROP TABLE IF EXISTS marketing_touches;
+DROP TABLE IF EXISTS users;
+
+CREATE TABLE users (
+    user_id INT PRIMARY KEY,
+    registration_date DATE NOT NULL,
+    city VARCHAR(50) NOT NULL,
+    device_type VARCHAR(20) NOT NULL,
+    age INT NOT NULL,
+    gender VARCHAR(10),
+    is_test BOOLEAN NOT NULL DEFAULT FALSE,
+    is_employee BOOLEAN NOT NULL DEFAULT FALSE
+);
+
+CREATE TABLE marketing_touches (
+    touch_id INT PRIMARY KEY,
+    user_id INT NOT NULL,
+    touch_date DATE NOT NULL,
+    channel VARCHAR(30) NOT NULL,
+    campaign_name VARCHAR(100) NOT NULL,
+    source_type VARCHAR(30) NOT NULL,
+    cost NUMERIC(10,2) NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
+
+CREATE TABLE applications (
+    application_id INT PRIMARY KEY,
+    user_id INT NOT NULL,
+    application_date DATE NOT NULL,
+    requested_amount NUMERIC(12,2) NOT NULL,
+    product_type VARCHAR(30) NOT NULL,
+    term_days INT NOT NULL,
+    income NUMERIC(12,2),
+    employment_type VARCHAR(30),
+    score INT,
+    decision VARCHAR(20) NOT NULL,
+    rejection_reason VARCHAR(100),
+    is_repeat_client BOOLEAN NOT NULL DEFAULT FALSE,
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
+
+CREATE TABLE loans (
+    loan_id INT PRIMARY KEY,
+    application_id INT NOT NULL UNIQUE,
+    user_id INT NOT NULL,
+    issue_date DATE NOT NULL,
+    issued_amount NUMERIC(12,2) NOT NULL,
+    term_days INT NOT NULL,
+    interest_amount NUMERIC(12,2) NOT NULL,
+    closed_date DATE,
+    days_past_due_max INT NOT NULL DEFAULT 0,
+    extension_count INT NOT NULL DEFAULT 0,
+    is_restructured BOOLEAN NOT NULL DEFAULT FALSE,
+    FOREIGN KEY (application_id) REFERENCES applications(application_id),
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
+
+CREATE TABLE payments (
+    payment_id INT PRIMARY KEY,
+    loan_id INT NOT NULL,
+    payment_date DATE NOT NULL,
+    payment_amount NUMERIC(12,2) NOT NULL,
+    payment_type VARCHAR(30) NOT NULL,
+    is_successful BOOLEAN NOT NULL DEFAULT TRUE,
+    FOREIGN KEY (loan_id) REFERENCES loans(loan_id)
+);
+
+INSERT INTO users (user_id, registration_date, city, device_type, age, gender, is_test, is_employee) VALUES
+(1,  '2025-01-03', 'Moscow',            'iOS',     24, 'F', FALSE, FALSE),
+(2,  '2025-01-05', 'Moscow',            'Android', 31, 'M', FALSE, FALSE),
+(3,  '2025-01-07', 'St Petersburg',    'Web',     28, 'F', FALSE, FALSE),
+(4,  '2025-01-10', 'Yekaterinburg',    'iOS',     36, 'M', FALSE, FALSE),
+(5,  '2025-01-12', 'Yekaterinburg',    'Android', 22, 'F', FALSE, FALSE),
+(6,  '2025-01-15', 'Nizhny Novgorod',  'Web',     41, 'M', FALSE, FALSE),
+(7,  '2025-01-16', 'Moscow',            'iOS',     29, 'F', FALSE, FALSE),
+(8,  '2025-01-18', 'St Petersburg',    'Android', 33, 'M', FALSE, FALSE),
+(9,  '2025-01-20', 'Nizhny Novgorod',  'Web',     27, 'F', FALSE, FALSE),
+(10, '2025-01-22', 'Moscow',            'Android', 39, 'M', FALSE, FALSE),
+(11, '2025-01-25', 'Yekaterinburg',     'iOS',     26, 'F', FALSE, FALSE),
+(12, '2025-01-28', 'St Petersburg',    'Web',     45, 'M', FALSE, FALSE),
+(13, '2025-02-01', 'Moscow',            'iOS',     30, 'F', FALSE, FALSE),
+(14, '2025-02-03', 'Nizhny Novgorod',  'Android', 34, 'M', FALSE, FALSE),
+(15, '2025-02-05', 'Moscow',            'Web',     23, 'F', FALSE, FALSE),
+(16, '2025-02-07', 'St Petersburg',    'iOS',     38, 'M', FALSE, FALSE),
+(17, '2025-02-08', 'Yekaterinburg',     'Android', 32, 'F', FALSE, FALSE),
+(18, '2025-02-10', 'Moscow',            'Web',     43, 'M', FALSE, FALSE),
+(19, '2025-02-11', 'St Petersburg',    'Android', 25, 'F', TRUE,  FALSE),
+(20, '2025-02-12', 'Moscow',            'iOS',     37, 'M', FALSE, TRUE);
+
+
+INSERT INTO marketing_touches (touch_id, user_id, touch_date, channel, campaign_name, source_type, cost) VALUES
+(1,  1,  '2025-01-02', 'Google Ads',   'Winter_Search_1',      'Paid',    12.50),
+(3,  2,  '2025-01-04', 'Facebook Ads', 'Retargeting_Jan',      'Paid',     9.00),
+(4,  3,  '2025-01-06', 'Google Ads',   'Brand_Search_Jan',     'Paid',    11.00),
+(5,  4,  '2025-01-09', 'Affiliate',    'CouponBlog_Deal',      'Partner', 15.00),
+(6,  5,  '2025-01-11', 'TikTok Ads',   'Young_Audience_1',     'Paid',     8.50),
+(7,  6,  '2025-01-14', 'Google Ads',   'Generic_Loans_Jan',    'Paid',    13.00),
+(8,  7,  '2025-01-15', 'Email',        'CRM_Reactivation',     'Owned',    0.70),
+(9,  8,  '2025-01-17', 'Facebook Ads', 'Lookalike_St Petersburg',     'Paid',    10.50),
+(10, 9,  '2025-01-19', 'Affiliate',    'FinancePortal_Main',   'Partner', 14.00),
+(11, 10, '2025-01-21', 'Google Ads',   'test_campaign',        'Paid',     5.00),
+(12, 11, '2025-01-24', 'TikTok Ads',   'Young_Audience_2',     'Paid',     9.20),
+(13, 12, '2025-01-27', 'Direct',       'Direct_Organic',       'Organic',  0.00),
+(14, 13, '2025-01-31', 'Google Ads',   'Winter_Search_2',      'Paid',    12.00),
+(15, 14, '2025-02-02', 'Affiliate',    'internal_affiliate',   'Partner',  3.00),
+(16, 15, '2025-02-04', 'Email',        'Newsletter_Feb',       'Owned',    0.40),
+(17, 16, '2025-02-06', 'Facebook Ads', 'Retargeting_Feb',      'Paid',     9.80),
+(18, 17, '2025-02-07', 'TikTok Ads',   'Young_Audience_3',     'Paid',     8.90),
+(19, 18, '2025-02-09', 'Direct',       'Direct_Organic',       'Organic',  0.00),
+(20, 19, '2025-02-10', 'Google Ads',   'Winter_Search_3',      'Paid',    11.50),
+(21, 20, '2025-02-11', 'Email',        'Employee_Internal',    'Owned',    0.00);
+
+INSERT INTO applications (
+    application_id, user_id, application_date, requested_amount, product_type, term_days,
+    income, employment_type, score, decision, rejection_reason, is_repeat_client
+) VALUES
+(101, 1,  '2025-01-04',  500.00, 'Payday',       30, 1800.00, 'Employed',     720, 'Approved', NULL,          FALSE),
+(102, 2,  '2025-01-06', 1200.00, 'Installment', 90, 2600.00, 'Employed',     640, 'Rejected', 'Low score',   FALSE),
+(103, 3,  '2025-01-09',  700.00, 'Payday',       30, 2100.00, 'Self-employed',690, 'Approved', NULL,          FALSE),
+(104, 4,  '2025-01-12', 2500.00, 'Installment',120, 3200.00, 'Employed',     610, 'Approved', NULL,          FALSE),
+(105, 5,  '2025-01-13',  400.00, 'Payday',       21, 1300.00, 'Student',      580, 'Rejected', 'Low income',  FALSE),
+(106, 6,  '2025-01-16', 1500.00, 'Installment', 90, 4100.00, 'Employed',     710, 'Approved', NULL,          FALSE),
+(107, 7,  '2025-01-18',  600.00, 'Payday',       30, 2200.00, 'Employed',     675, 'Approved', NULL,          FALSE),
+(108, 8,  '2025-01-20', 1800.00, 'Installment',120, 2800.00, 'Employed',     660, 'Approved', NULL,          FALSE),
+(109, 9,  '2025-01-22', 1000.00, 'Installment', 60, 2400.00, 'Self-employed',630, 'Rejected', 'Low score',   FALSE),
+(110, 10, '2025-01-24',  550.00, 'Payday',       30, 1900.00, 'Employed',     605, 'Approved', NULL,          FALSE),
+(111, 11, '2025-01-26',  450.00, 'Payday',       21, 1400.00, 'Student',      650, 'Approved', NULL,          FALSE),
+(112, 12, '2025-01-29', 3000.00, 'Installment',180, 5000.00, 'Employed',     750, 'Approved', NULL,          FALSE),
+(113, 13, '2025-02-01',  900.00, 'Installment', 60, 2700.00, 'Employed',     700, 'Approved', NULL,          FALSE),
+(114, 14, '2025-02-03', 1100.00, 'Installment', 90, 2300.00, 'Employed',     590, 'Rejected', 'Low score',   FALSE),
+(115, 15, '2025-02-05',  500.00, 'Payday',       30, 1600.00, 'Student',      670, 'Approved', NULL,          FALSE),
+(116, 16, '2025-02-07', 2200.00, 'Installment',120, 3500.00, 'Employed',     720, 'Approved', NULL,          FALSE),
+(117, 17, '2025-02-09',  650.00, 'Payday',       30, 1750.00, 'Employed',     610, 'Approved', NULL,          FALSE),
+(118, 18, '2025-02-11', 1400.00, 'Installment', 90, 2900.00, 'Self-employed',680, 'Approved', NULL,          FALSE),
+(122, 19, '2025-03-06', 1000.00, 'Installment', 60, 2500.00, 'Employed',     710, 'Approved', NULL,          FALSE),
+(123, 20, '2025-03-07',  600.00, 'Payday',       30, 3000.00, 'Employed',     780, 'Approved', NULL,          FALSE);
+
+INSERT INTO loans (
+    loan_id, application_id, user_id, issue_date, issued_amount, term_days, interest_amount,
+     closed_date, days_past_due_max, extension_count, is_restructured
+) VALUES
+(1001, 101, 1,  '2025-01-05',  500.00,  30,  75.00, '2025-02-03',  0, 0, FALSE),
+(1002, 103, 3,  '2025-01-10',  700.00,  30, 105.00, '2025-02-11',  5, 1, FALSE),
+(1003, 104, 4,  '2025-01-13', 2400.00, 120, 480.00, NULL,          18, 0, FALSE),
+(1004, 106, 6,  '2025-01-17', 1500.00,  90, 270.00, '2025-04-15',  2, 0, FALSE),
+(1005, 107, 7,  '2025-01-19',  600.00,  30,  90.00, '2025-02-25', 12, 1, FALSE),
+(1006, 108, 8,  '2025-01-21', 1700.00, 120, 340.00, NULL,          35, 2, FALSE),
+(1007, 110, 10, '2025-01-25',  550.00,  30,  82.50, '2025-03-01',  0, 0, FALSE),
+(1008, 111, 11, '2025-01-27',  450.00,  21,  54.00, '2025-02-17',  0, 0, FALSE),
+(1009, 112, 12, '2025-01-30', 3000.00, 180, 720.00, NULL,           0, 0, FALSE),
+(1010, 113, 13, '2025-02-02',  900.00,  60, 144.00, '2025-04-05',  8, 0, FALSE),
+(1011, 115, 15, '2025-02-06',  500.00,  30,  75.00, '2025-03-09',  0, 0, FALSE),
+(1012, 116, 16, '2025-02-08', 2200.00, 120, 440.00, NULL,          22, 1, TRUE),
+(1013, 117, 17, '2025-02-10',  650.00,  30,  97.50, '2025-03-20', 15, 1, FALSE),
+(1014, 118, 18, '2025-02-12', 1400.00,  90, 252.00, NULL,           4, 0, FALSE),
+(1017, 122, 19, '2025-03-07', 1000.00,  60, 160.00, NULL,           0, 0, FALSE),
+(1018, 123, 20, '2025-03-08',  600.00,  30,  90.00, '2025-04-07',  0, 0, FALSE);
+
+INSERT INTO payments (payment_id, loan_id, payment_date, payment_amount, payment_type, is_successful) VALUES
+(1, 1001, '2025-01-20', 250.00, 'Scheduled', TRUE),
+(2, 1001, '2025-02-03', 325.00, 'Scheduled', TRUE),
+(3, 1002, '2025-01-25', 200.00, 'Scheduled', TRUE),
+(4, 1002, '2025-02-11', 605.00, 'Scheduled', TRUE),
+(5, 1003, '2025-02-13', 480.00, 'Scheduled', TRUE),
+(6, 1003, '2025-03-13', 480.00, 'Scheduled', TRUE),
+(7, 1003, '2025-04-13', 480.00, 'Scheduled', FALSE),
+(8, 1004, '2025-02-17', 590.00, 'Scheduled', TRUE),
+(9, 1004, '2025-03-17', 590.00, 'Scheduled', TRUE),
+(10, 1004, '2025-04-15', 590.00, 'Scheduled', TRUE),
+(11, 1005, '2025-02-01', 150.00, 'Scheduled', TRUE),
+(12, 1005, '2025-02-10', 150.00, 'Extension', TRUE),
+(13, 1005, '2025-02-25', 390.00, 'Scheduled', TRUE),
+(14, 1006, '2025-02-21', 340.00, 'Scheduled', TRUE),
+(15, 1006, '2025-03-21', 340.00, 'Scheduled', FALSE),
+(16, 1007, '2025-02-08', 300.00, 'Scheduled', TRUE),
+(17, 1007, '2025-03-01', 332.50, 'Scheduled', TRUE),
+(18, 1008, '2025-02-17', 504.00, 'Scheduled', TRUE),
+(19, 1009, '2025-02-28', 620.00, 'Scheduled', TRUE),
+(20, 1009, '2025-03-30', 620.00, 'Scheduled', TRUE),
+(21, 1010, '2025-03-02', 522.00, 'Scheduled', TRUE),
+(22, 1010, '2025-04-05', 522.00, 'Scheduled', TRUE),
+(23, 1011, '2025-03-09', 575.00, 'Scheduled', TRUE),
+(24, 1012, '2025-03-08', 660.00, 'Scheduled', TRUE),
+(25, 1012, '2025-04-08', 660.00, 'Extension', TRUE),
+(26, 1013, '2025-02-25', 200.00, 'Scheduled', TRUE),
+(27, 1013, '2025-03-20', 547.50, 'Scheduled', TRUE),
+(28, 1014, '2025-03-12', 550.00, 'Scheduled', TRUE),
+(32, 1017, '2025-04-06', 580.00, 'Scheduled', TRUE),
+(33, 1018, '2025-03-20', 300.00, 'Scheduled', TRUE),
+(34, 1018, '2025-04-07', 390.00, 'Scheduled', TRUE);
+
+
+select m.channel, count(distinct m.user_id) as users,
+count (distinct a.application_id) as applications,
+count (distinct case when a.decision='Approved' then a.application_id end) as applications_approved,
+count (distinct loan_id) as loans,
+ROUND (COALESCE (sum(l.issued_amount), 0),2) as total_amount,
+round (COALESCE (avg (l.issued_amount), 0),2) as average_amount
+from marketing_touches m
+join users u
+    on m.user_id = u.user_id
+left join applications a
+    ON m.user_id = a.user_id
+left join loans l
+    on a.application_id = l.application_id
+where u.is_test=false
+and u.is_employee=False
+AND LOWER (m.campaign_name) NOT LIKE '%test%'
+AND LOWER(m.campaign_name) NOT LIKE '%internal%'
+group by m.channel
+order by total_amount desc;
+
+SELECT 
+    a.product_type,
+    COUNT(*) AS number_of_applications,
+    COUNT(CASE WHEN a.decision = 'Approved' THEN 1 END) AS number_of_approved_applications,
+    ROUND(100.0 * COUNT(CASE WHEN a.decision = 'Approved' THEN 1 END) / COUNT(*), 2) AS approval_rate
+FROM applications a
+JOIN users u ON a.user_id = u.user_id
+WHERE u.is_test = FALSE 
+  AND u.is_employee = FALSE
+GROUP BY a.product_type
+ORDER BY approval_rate DESC;
+
+WITH loan_payment_stats AS (
+    SELECT 
+        loan_id,
+        COUNT(*) AS total_payments,
+        COUNT(CASE WHEN is_successful THEN 1 END) AS successful_payments,
+        COALESCE(SUM(CASE WHEN is_successful THEN payment_amount ELSE 0 END), 0) AS total_amount_paid
+    FROM payments
+    GROUP BY loan_id
+)
+SELECT 
+    a.product_type,
+    COUNT(l.loan_id) AS number_of_loans,
+    ROUND(AVG(COALESCE(lps.total_payments, 0)), 2) AS avg_payments_per_loan,
+    ROUND(
+        100.0 * SUM(COALESCE(lps.successful_payments, 0)) / 
+        NULLIF(SUM(COALESCE(lps.total_payments, 0)), 0), 
+        2
+    ) AS successful_payments_share
+FROM loans l
+JOIN applications a ON l.application_id = a.application_id
+JOIN users u ON a.user_id = u.user_id
+LEFT JOIN loan_payment_stats lps ON l.loan_id = lps.loan_id
+WHERE u.is_test = FALSE
+  AND u.is_employee = FALSE
+  AND l.is_restructured = FALSE
+GROUP BY a.product_type
+ORDER BY successful_payments_share DESC;
+
+SELECT 
+    a.product_type,
+    COUNT(l.loan_id) AS number_of_loans,
+    ROUND(AVG(l.days_past_due_max), 2) AS avg_days_past_due_max,
+    ROUND(
+        100.0 * SUM(CASE WHEN l.days_past_due_max > 10 THEN 1 ELSE 0 END) / COUNT(l.loan_id), 
+        2
+    ) AS share_of_bad_loans
+FROM loans l
+JOIN applications a ON l.application_id = a.application_id
+JOIN users u ON a.user_id = u.user_id
+WHERE u.is_test = FALSE
+  AND u.is_employee = FALSE
+  AND l.is_restructured = FALSE
+GROUP BY a.product_type
+ORDER BY share_of_bad_loans DESC;
+
+WITH filtered_users AS (
+    SELECT user_id
+    FROM users
+    WHERE is_test = FALSE AND is_employee = FALSE),
+filtered_touches AS (
+    SELECT
+        mt.user_id,
+        mt.channel,
+        mt.cost
+    FROM marketing_touches mt
+    WHERE LOWER(mt.campaign_name) NOT LIKE '%test%'
+    AND LOWER (mt.campaign_name) NOT LIKE '%internal%'),
+channel_costs AS (
+    SELECT
+        ft.channel,
+        SUM(ft.cost) AS total_marketing_cost
+    FROM filtered_touches ft
+    JOIN filtered_users fu
+        ON ft.user_id = fu.user_id
+    GROUP BY ft.channel
+  ),
+channel_metrics AS (
+    SELECT
+        ft.channel,
+        COUNT (DISTINCT a.application_id) AS number_of_applications,
+        COUNT (DISTINCT l.loan_id) AS number_of_issued_loans
+    FROM filtered_touches ft
+    INNER JOIN filtered_users fu ON ft.user_id = fu.user_id
+    LEFT JOIN applications a ON ft.user_id = a.user_id
+    LEFT JOIN loans l ON a.application_id = l.application_id
+    GROUP BY ft.channel)
+SELECT
+      cc.channel,
+      ROUND(COALESCE (cc.total_marketing_cost,0),2) AS total_marketing_cost, 
+      number_of_applications,
+      number_of_issued_loans,
+      ROUND (
+        COALESCE (total_marketing_cost, 0) / NULLIF (number_of_applications,0),2
+      ) AS cost_per_application,
+      ROUND (
+        COALESCE (total_marketing_cost, 0) / NULLIF(number_of_issued_loans, 0),2
+      ) AS cost_per_loan
+FROM channel_costs as cc
+JOIN channel_metrics cm
+    ON cc.channel = cm.channel
+ORDER BY cost_per_loan ASC;
+
+
+WITH filtered_users AS (
+  SELECT user_id
+  FROM users
+  WHERE is_test = FALSE AND is_employee = FALSE),
+filtered_loans AS (
+    SELECT
+        l.loan_id,
+        L.user_id,
+        l.issued_amount,
+        l.days_past_due_max,
+        a.product_type,
+        u.city
+    FROM loans l
+    INNER JOIN applications a ON l.application_id = a.application_id
+    INNER JOIN filtered_users fu ON l.user_id = fu.user_id
+    INNER JOIN users u ON l.user_id = u.user_id
+    WHERE l.is_restructured = FALSE),
+loan_quality AS (
+      SELECT
+          city,
+          product_type,
+          COUNT (loan_id) AS number_of_loans,
+          SUM (issued_amount) AS total_loan_amount,
+          ROUND (AVG (days_past_due_max), 2) AS avg_days_past_due_max,
+          ROUND (100.0 * SUM(CASE WHEN days_past_due_max > 10 THEN 1 ELSE 0 END) / COUNT (loan_id),2) 
+          AS share_of_bad_loans
+      FROM filtered_loans
+      GROUP BY city, product_type)
+SELECT *
+FROM loan_quality
+WHERE number_of_loans >= 2
+ORDER BY share_of_bad_loans DESC, avg_days_past_due_max DESC;
+
+
+WITH filtered_users AS (
+  SELECT user_id
+  FROM users
+  WHERE is_test = FALSE AND is_employee = FALSE),
+filtered_touches AS (
+  SELECT mt.user_id,mt.channel, mt.cost
+  FROM marketing_touches mt
+  WHERE LOWER(mt.campaign_name) NOT LIKE '%test%' 
+    AND LOWER (mt.campaign_name) NOT LIKE'%internal%'),
+channel_applications AS (
+  SELECT ft.channel, ft.user_id, a.application_id, a.decision, l.loan_id, l.issued_amount, l.days_past_due_max
+  FROM filtered_touches ft
+  INNER JOIN filtered_users fu ON ft.user_id = fu.user_id
+  LEFT JOIN applications a ON ft.user_id = a.user_id
+  LEFT JOIN loans l ON a.application_id = l.application_id
+      AND l.is_restructured = FALSE
+),
+channel_metrics AS (
+  SELECT
+      channel,
+      COUNT (DISTINCT loan_id) AS number_of_loans,
+      COALESCE( SUM(DISTINCT issued_amount),0) AS total_issued_amount,
+      ROUND(
+        100.0* count(DISTINCT CASE WHEN decision = 'Approved'
+        THEN application_id END)
+        /NULLIF(COUNT(DISTINCT application_id),0 ),
+        2
+      ) AS approval_rate,
+      ROUND(AVG(days_past_due_max),2) as avg_days_past_due_max
+  FROM channel_applications
+  GROUP BY channel
+)
+SELECT *
+FROM channel_metrics
+WHERE number_of_loans > 0 
+ORDER BY approval_rate DESC , avg_days_past_due_max ASC;
+
+select a.product_type,
+round (100.0*count(case when a.decision='Approved' then 1 end )/count(*),2) as approval_rate,
+round(avg(days_past_due_max),2) as average_dpd
+from applications a
+join users u on a.user_id=u.user_id
+left join loans l on a.application_id=l.application_id
+where u.is_test=FALSE and u.is_employee=FALSE
+group by product_type;
+
+select m.channel,
+count(distinct a.application_id) as number_of_appl,
+count(case when a.decision='Approved' then 1 end) as approved_applications,
+count(distinct l.loan_id) as number_issued_loans,
+round(100.0*count(case when a.decision='Approved' then 1 end)/count(distinct a.application_id),2) as approval_rate,
+round(100.0*count(distinct l.loan_id)/count(case when a.decision='Approved' then 1 end) ,2) as issue_rate
+from applications a
+join users u on a.user_id=u.user_id
+left join marketing_touches m on a.user_id=m.user_id
+left join loans l on a.application_id=l.application_id
+where u.is_test=false and u.is_employee=false
+and lower(m.campaign_name) not like '%test%'
+and lower(m.campaign_name) not like '%internal%'
+group by m.channel;
+
+
+select channel, product_type,
+round(avg(days_past_due_max),2) as average_dpd,
+round(sum(distinct m.cost),2) as total_cost_marketing_camp,
+round(sum(distinct m.cost)/count(distinct a.application_id),2) as cost_per_appl,
+count(distinct l.loan_id) as number_loans,
+round(sum(l.issued_amount),2) as total_amount_loans,
+round(100.0*count(case when a.decision='Approved' then 1 end)/count ( distinct a.application_id) ,2)as approval_rate
+from applications a
+left join marketing_touches m on a.user_id=m.user_id
+left join loans l on a.application_id=l.application_id
+join users u on a.user_id=u.user_id
+where u.is_test=false and u.is_employee=false
+and lower(m. campaign_name) not like '%test%'
+and lower(m. campaign_name) not like '%internal%'
+group by m.channel, a.product_type
+
+
